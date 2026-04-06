@@ -69,3 +69,5 @@ models/*.parquet
 
 # Optional: if you later move artifacts to separate folder
 artifacts/preview.ipynb
+
+preview.ipynb
