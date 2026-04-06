@@ -1,0 +1,71 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+
+# =========================
+# Jupyter / Notebook cache
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs / Temp
+# =========================
+*.log
+
+# =========================
+# Flask / Python misc
+# =========================
+*.sqlite3
+
+# =========================
+# Docs folder (ignore everything inside docs/)
+# =========================
+docs/
+
+# =========================
+# Data files (large/generated)
+# =========================
+data/raw/*
+data/staging/*
+data/processed/*.parquet
+
+# Keep folder structure
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+!data/processed/.gitkeep
+
+# =========================
+# Model artifacts (generated)
+# =========================
+models/*.pkl
+models/*.parquet
+
+# Optional: if you later move artifacts to separate folder
+artifacts/preview.ipynb

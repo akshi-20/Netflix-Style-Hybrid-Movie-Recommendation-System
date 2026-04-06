@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Movies • CineWatch{% endblock %}
+
+{% block content %}
+<section class="page-section">
+  <div class="container">
+
+    <div class="page-header">
+      <h1 class="page-title">Browse Movies</h1>
+      <p class="page-subtitle">
+        Search by title or explore by genre
+      </p>
+    </div>
+
+    <form method="GET" action="{{ url_for('search') }}" class="search-page-form">
+      <div class="search-input-wrap">
+        <input
+          type="text"
+          name="q"
+          value="{{ query or '' }}"
+          placeholder="Search for a movie..."
+          class="search-page-input"
+        />
+        <button type="submit" class="search-page-btn">Search</button>
+      </div>
+
+      {% if genre %}
+      <input type="hidden" name="genre" value="{{ genre }}">
+      {% endif %}
+    </form>
+
+    {% if genres %}
+    <div class="genre-filter-block">
+      <div class="genre-filter-title">Browse by Genre</div>
+
+      <div class="genre-pills">
+        <a
+          href="{{ url_for('search') }}"
+          class="genre-pill {% if not genre %}active{% endif %}"
+        >
+          All
+        </a>
+
+        {% for g in genres %}
+        <a
+          href="{{ url_for('search', q=query, genre=g) }}"
+          class="genre-pill {% if genre == g %}active{% endif %}"
+        >
+          {{ g }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="results-meta">
+      {% if query or genre %}
+        <h2 class="results-title">
+          Results
+          {% if query %}for “{{ query }}”{% endif %}
+          {% if genre %} in {{ genre }}{% endif %}
+        </h2>
+      {% else %}
+        <h2 class="results-title">Top Movies</h2>
+      {% endif %}
+
+      <div class="results-count">
+        {{ results|length }} movie{{ '' if results|length == 1 else 's' }}
+      </div>
+    </div>
+
+    {% if results and results|length > 0 %}
+    <div class="movie-grid search-grid">
+      {% for m in results %}
+      <a href="{{ url_for('movie_detail', movie_id=m.id) }}" class="movie-card-link">
+        <div class="movie-card search-card">
+          <div class="movie-poster">
+            <img src="{{ m.poster_url }}" alt="{{ m.title }}" loading="lazy">
+            <span class="poster-rating">⭐ {{ m.rating }}</span>
+          </div>
+
+          <div class="movie-card-body">
+            <h3 class="movie-title">{{ m.title }}</h3>
+
+            <div class="movie-meta-row">
+              <span class="movie-year">{{ m.year }}</span>
+              <span class="movie-dot">•</span>
+              <span class="movie-genre">
+                {{ m.director if m.director else 'Unknown Director' }}
+              </span>
+            </div>
+
+            <div class="movie-stats">
+              <span class="rating-pill">IMDb {{ m.rating }}</span>
+              <span class="votes-pill">{{ "{:,}".format(m.votes) }} votes</span>
+            </div>
+
+            {% if m.genres %}
+            <div class="genre-line">
+              {{ m.genres }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🎬</div>
+      <h3>No movies found</h3>
+      <p>Try another title or choose a different genre.</p>
+      <a href="{{ url_for('search') }}" class="empty-btn">Clear Filters</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<style>
+  .page-section {
+    padding: 2rem 0 3rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+    color: #fff;
+  }
+
+  .page-subtitle {
+    color: #a8a8b3;
+    margin: 0;
+  }
+
+  .search-page-form {
+    margin-bottom: 1.5rem;
+  }
+
+  .search-input-wrap {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .search-page-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.95rem 1rem;
+    border-radius: 14px;
+    border: 1px solid #2a2a35;
+    background: #111118;
+    color: #fff;
+    outline: none;
+    font-size: 1rem;
+  }
+
+  .search-page-input:focus {
+    border-color: #e50914;
+    box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
+  }
+
+  .search-page-btn {
+    padding: 0.95rem 1.3rem;
+    border: none;
+    border-radius: 14px;
+    background: #e50914;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .search-page-btn:hover {
+    background: #f6121d;
+  }
+
+  .genre-filter-block {
+    margin-bottom: 1.5rem;
+  }
+
+  .genre-filter-title {
+    font-size: 0.95rem;
+    color: #c7c7d0;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  .genre-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .genre-pill {
+    text-decoration: none;
+    color: #d8d8df;
+    background: #171720;
+    border: 1px solid #262632;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .genre-pill:hover {
+    background: #20202b;
+    transform: translateY(-1px);
+  }
+
+  .genre-pill.active {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
+  }
+
+  .results-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .results-title {
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .results-count {
+    color: #a8a8b3;
+    font-size: 0.95rem;
+  }
+
+  .search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1rem;
+  }
+
+  .movie-card-link {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .search-card {
+    background: #111118;
+    border: 1px solid #1e1e28;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    height: 100%;
+  }
+
+  .search-card:hover {
+    transform: translateY(-4px);
+    border-color: #30303d;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+
+  .movie-poster {
+    position: relative;
+    height: 320px;
+    overflow: hidden;
+    background: #161620;
+  }
+
+  .movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .search-card:hover .movie-poster img {
+    transform: scale(1.04);
+  }
+
+  .movie-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.18));
+    pointer-events: none;
+  }
+
+  .poster-rating {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    background: rgba(0,0,0,0.75);
+    color: #ffd86b;
+    border: 1px solid rgba(255,216,107,0.25);
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .movie-card-body {
+    padding: 1rem;
+  }
+
+  .movie-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.6rem 0;
+    line-height: 1.35;
+    min-height: 2.7em;
+  }
+
+  .movie-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #b7b7c4;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .movie-dot {
+    opacity: 0.6;
+  }
+
+  .movie-stats {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.65rem;
+  }
+
+  .rating-pill,
+  .votes-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .rating-pill {
+    background: rgba(255, 204, 0, 0.12);
+    color: #ffd86b;
+  }
+
+  .votes-pill {
+    background: #1a1a24;
+    color: #b9b9c7;
+  }
+
+  .genre-line {
+    color: #8f8f9e;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .empty-state {
+    margin-top: 1rem;
+    background: #111118;
+    border: 1px solid #1f1f29;
+    border-radius: 20px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .empty-state h3 {
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state p {
+    color: #a7a7b5;
+    margin-bottom: 1rem;
+  }
+
+  .empty-btn {
+    display: inline-block;
+    text-decoration: none;
+    background: #e50914;
+    color: #fff;
+    padding: 0.7rem 1.1rem;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 640px) {
+    .page-title {
+      font-size: 1.6rem;
+    }
+
+    .search-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .movie-poster {
+      height: 280px;
+    }
+  }
+</style>
+{% endblock %}

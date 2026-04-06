@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}CineWatch{% endblock %}</title>
+
+  <!-- Google Fonts: Bebas Neue (display) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────────────────── */
+    :root {
+      --bg:         #0a0a0f;
+      --surface:    #111118;
+      --surface2:   #18181f;
+      --border:     rgba(255,255,255,.07);
+      --accent:     #e50914;
+      --accent2:    #ff6b35;
+      --gold:       #f5c518;
+      --text:       #e8e8ee;
+      --muted:      #7a7a8c;
+      --card-w:     180px;
+      --card-h:     260px;
+      --radius:     10px;
+      --nav-h:      68px;
+      --font-disp:  'Bebas Neue', sans-serif;
+      --font-body:  'DM Sans', sans-serif;
+      --glow:       0 0 40px rgba(229,9,20,.35);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── SCROLLBAR ──────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    /* ─── NAV ────────────────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h);
+      display: flex; align-items: center; gap: 2rem;
+      padding: 0 2.5rem;
+      background: linear-gradient(to bottom, rgba(10,10,15,.98) 60%, transparent);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-family: var(--font-disp);
+      font-size: 2rem;
+      letter-spacing: .04em;
+      color: var(--accent);
+      text-shadow: var(--glow);
+      flex-shrink: 0;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color .2s;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+    /* search in nav */
+    .nav-search {
+      margin-left: auto;
+      position: relative;
+    }
+    .nav-search input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .85rem;
+      padding: .45rem 1rem .45rem 2.4rem;
+      width: 240px;
+      transition: border-color .2s, width .3s;
+      outline: none;
+    }
+    .nav-search input:focus {
+      border-color: var(--accent);
+      width: 300px;
+    }
+    .nav-search-icon {
+      position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: .95rem; pointer-events: none;
+    }
+
+    /* autocomplete dropdown */
+    .autocomplete-dropdown {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+      z-index: 200;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    }
+    .autocomplete-dropdown.show { display: block; }
+    .autocomplete-item {
+      padding: .6rem 1rem;
+      cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .85rem;
+      transition: background .15s;
+    }
+    .autocomplete-item:hover { background: var(--surface); }
+    .autocomplete-item .ac-genre { color: var(--muted); font-size: .75rem; }
+
+    /* ─── MAIN WRAPPER ───────────────────────────────────────────────────── */
+    main { padding-top: var(--nav-h); min-height: 100vh; }
+
+    /* ─── SECTION TITLES ─────────────────────────────────────────────────── */
+    .section-title {
+      font-family: var(--font-disp);
+      font-size: 1.6rem;
+      letter-spacing: .06em;
+      color: var(--text);
+      margin-bottom: 1.1rem;
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1; height: 1px; background: var(--border);
+    }
+    .section-title .badge {
+      font-family: var(--font-body);
+      font-size: .65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      background: var(--accent);
+      color: #fff;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+    }
+
+    /* ─── MOVIE CARD ─────────────────────────────────────────────────────── */
+    .movie-card {
+      width: var(--card-w);
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      transition: transform .25s cubic-bezier(.34,1.56,.64,1),
+                  box-shadow .25s, border-color .25s;
+      position: relative;
+    }
+    .movie-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 16px 40px rgba(0,0,0,.6), 0 0 0 1px var(--accent);
+      border-color: var(--accent);
+      z-index: 2;
+    }
+    .card-poster {
+      width: 100%; height: var(--card-h);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: .5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    /* decorative gradient bar per genre */
+    .card-poster::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--genre-color, linear-gradient(135deg, #1a1a2e, #16213e));
+      opacity: .9;
+    }
+    .card-poster-title {
+      position: relative; z-index: 1;
+      font-family: var(--font-disp);
+      font-size: 1.15rem;
+      letter-spacing: .05em;
+      color: #fff;
+      text-align: center;
+      padding: 0 .75rem;
+      line-height: 1.2;
+      text-shadow: 0 2px 8px rgba(0,0,0,.8);
+    }
+    .card-poster-year {
+      position: relative; z-index: 1;
+      font-size: .7rem;
+      color: rgba(255,255,255,.55);
+      letter-spacing: .1em;
+    }
+    /* top-right rating badge */
+    .card-rating {
+      position: absolute; top: .5rem; right: .5rem; z-index: 2;
+      background: rgba(0,0,0,.75);
+      border: 1px solid rgba(245,197,24,.4);
+      border-radius: 4px;
+      padding: .15rem .4rem;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--gold);
+      display: flex; align-items: center; gap: .2rem;
+    }
+    .card-info {
+      padding: .65rem .75rem .75rem;
+    }
+    .card-info-title {
+      font-size: .82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: .25rem;
+    }
+    .card-info-meta {
+      display: flex; justify-content: space-between;
+      font-size: .72rem;
+      color: var(--muted);
+    }
+    .card-genre-tag {
+      font-size: .65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: .15rem .4rem;
+      border-radius: 3px;
+      background: rgba(229,9,20,.15);
+      color: var(--accent);
+      border: 1px solid rgba(229,9,20,.25);
+    }
+
+    /* ─── HORIZONTAL SCROLL ROW ─────────────────────────────────────────── */
+    .row-wrap { margin-bottom: 3rem; }
+    .row-scroll {
+      display: flex; gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: .75rem;
+      scrollbar-width: thin;
+    }
+    .row-scroll::-webkit-scrollbar { height: 4px; }
+
+    /* ─── GRID ───────────────────────────────────────────────────────────── */
+    .movies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+      gap: 1.25rem;
+    }
+    .movies-grid .movie-card { width: 100%; }
+
+    /* ─── TOAST ──────────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: .75rem 1.25rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+      transform: translateY(20px); opacity: 0;
+      transition: transform .3s, opacity .3s;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+      font-size: .78rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+    footer strong { color: var(--accent); font-family: var(--font-disp); letter-spacing: .05em; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; gap: 1rem; }
+      .nav-links { display: none; }
+      .nav-search input { width: 160px; }
+      .nav-search input:focus { width: 200px; }
+    }
+
+    /* ─── PAGE ENTER ANIMATION ───────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fadeUp .45s ease both; }
+    .animate-in:nth-child(1) { animation-delay: .05s; }
+    .animate-in:nth-child(2) { animation-delay: .12s; }
+    .animate-in:nth-child(3) { animation-delay: .19s; }
+    .animate-in:nth-child(4) { animation-delay: .26s; }
+    .animate-in:nth-child(5) { animation-delay: .33s; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ──────────────────────────────────────────────────────────── -->
+<nav>
+  <a href="/" class="nav-logo">Cine<span>Watch</span></a>
+  <div class="nav-links">
+    <a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a>
+    <a href="/search" class="{% if request.endpoint in ['search','api_search'] %}active{% endif %}">Browse</a>
+  </div>
+
+  <div class="nav-search">
+    <span class="nav-search-icon">⌕</span>
+    <input type="text" id="navSearchInput" placeholder="Search movies…" autocomplete="off"
+           value="{{ request.args.get('q','') }}">
+    <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+  </div>
+</nav>
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer>
+  <strong>CineWatch</strong> — Powered by IMDB data &amp; your recommendation engine
+</footer>
+
+<div id="toast"></div>
+
+<!-- ── GLOBAL JS ────────────────────────────────────────────────────────── -->
+<script>
+/* ── Genre colour map ─────────────────────────────────────────────────── */
+const GENRE_COLORS = {
+  Action:    'linear-gradient(135deg,#1a0a00,#4a1a00)',
+  Animation: 'linear-gradient(135deg,#001a2e,#002e4a)',
+  Crime:     'linear-gradient(135deg,#0f0f0f,#2a0a0a)',
+  Drama:     'linear-gradient(135deg,#0a0a1a,#1a0a2a)',
+  Mystery:   'linear-gradient(135deg,#050510,#100520)',
+  'Sci-Fi':  'linear-gradient(135deg,#001020,#00203a)',
+  Thriller:  'linear-gradient(135deg,#100505,#200a10)',
+  War:       'linear-gradient(135deg,#0a0800,#1a1400)',
+  Default:   'linear-gradient(135deg,#101018,#18181f)',
+};
+function applyGenreColors() {
+  document.querySelectorAll('[data-genre]').forEach(el => {
+    const g = el.dataset.genre;
+    const bg = GENRE_COLORS[g] || GENRE_COLORS.Default;
+    const poster = el.querySelector('.card-poster');
+    if (poster) poster.style.setProperty('--genre-color', bg);
+  });
+}
+
+/* ── Toast helper ─────────────────────────────────────────────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ── Movie card builder ───────────────────────────────────────────────── */
+function buildCard(m) {
+  return `
+  <a href="/movie/${encodeURIComponent(m.id)}" class="movie-card animate-in" data-genre="${m.genre}">
+    <div class="card-poster">
+      <span class="card-poster-title">${m.title}</span>
+      <span class="card-poster-year">${m.year}</span>
+    </div>
+    <span class="card-rating">★ ${m.rating}</span>
+    <div class="card-info">
+      <div class="card-info-title">${m.title}</div>
+      <div class="card-info-meta">
+        <span class="card-genre-tag">${m.genre}</span>
+        <span>${m.year}</span>
+      </div>
+    </div>
+  </a>`;
+}
+
+/* ── Autocomplete ─────────────────────────────────────────────────────── */
+const navInput = document.getElementById('navSearchInput');
+const dropdown = document.getElementById('autocompleteDropdown');
+let acTimer;
+
+navInput.addEventListener('input', () => {
+  clearTimeout(acTimer);
+  const q = navInput.value.trim();
+  if (q.length < 2) { dropdown.classList.remove('show'); return; }
+  acTimer = setTimeout(async () => {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!data.length) { dropdown.classList.remove('show'); return; }
+    dropdown.innerHTML = data.map(m => `
+      <div class="autocomplete-item" onclick="location.href='/movie/${encodeURIComponent(m.id)}'">
+        <span>${m.title}</span>
+        <span class="ac-genre">${m.genre} · ${m.year}</span>
+      </div>`).join('');
+    dropdown.classList.add('show');
+  }, 200);
+});
+
+navInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    dropdown.classList.remove('show');
+    window.location.href = `/search?q=${encodeURIComponent(navInput.value)}`;
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-search')) dropdown.classList.remove('show');
+});
+
+document.addEventListener('DOMContentLoaded', () => { applyGenreColors(); });
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} • CineWatch{% endblock %}
+
+{% block content %}
+<section class="movie-detail-page">
+  {% if movie.backdrop_url %}
+  <div class="backdrop-hero" style="background-image: url('{{ movie.backdrop_url }}');"></div>
+  {% endif %}
+
+  <div class="container movie-layer">
+
+    <div class="movie-hero">
+      <div class="movie-hero-poster">
+        <img 
+          src="{{ movie.poster_url or '' }}" 
+          alt="{{ movie.title }}" 
+          class="movie-poster-img"
+          loading="lazy"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        >
+        <div class="premium-poster-fallback hero-fallback" style="display:none;">
+          <div class="fallback-icon">🎬</div>
+          <div class="fallback-title">{{ movie.title }}</div>
+          <div class="fallback-subtitle">{{ movie.year if movie.year else 'Movie' }}</div>
+        </div>
+      </div>
+
+      <div class="movie-hero-content">
+        <div class="movie-badges">
+          <span class="badge year-badge">{{ movie.year }}</span>
+          <span class="badge genre-badge">{{ (movie.genres.split(',')[0] if movie.genres else 'Movie') }}</span>
+          <span class="badge rating-badge">⭐ {{ movie.rating }}</span>
+          {% if movie.tmdb_vote %}
+          <span class="badge tmdb-badge">TMDb {{ "%.1f"|format(movie.tmdb_vote) }}</span>
+          {% endif %}
+        </div>
+
+        <h1 class="movie-hero-title">{{ movie.title }}</h1>
+
+        <p class="movie-hero-subtitle">
+          {% if movie.genres %}
+            {{ movie.genres }}
+          {% else %}
+            Movie
+          {% endif %}
+        </p>
+
+        {% if movie.overview %}
+        <div class="overview-block">
+          <h3>Overview</h3>
+          <p>{{ movie.overview }}</p>
+        </div>
+        {% endif %}
+
+        <div class="movie-stats-row">
+          <div class="stat-card">
+            <div class="stat-label">IMDb Rating</div>
+            <div class="stat-value">{{ movie.rating }}</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Votes</div>
+            <div class="stat-value">{{ "{:,}".format(movie.votes) }}</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Release Year</div>
+            <div class="stat-value">{{ movie.year }}</div>
+          </div>
+
+          {% if movie.director %}
+          <div class="stat-card">
+            <div class="stat-label">Director</div>
+            <div class="stat-value small">{{ movie.director }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="movie-actions">
+          <a href="{{ url_for('search') }}" class="action-btn secondary-btn">Browse More</a>
+          <a href="{{ url_for('index') }}" class="action-btn primary-btn">Home</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="recommendation-section">
+      <div class="section-head">
+        <h2>Because You Watched {{ movie.title }}</h2>
+        <p>Movies similar in theme, content, and audience taste</p>
+      </div>
+
+      {% if recommendations and recommendations|length > 0 %}
+      <div class="recommendation-grid">
+        {% for rec in recommendations %}
+        <a href="{{ url_for('movie_detail', movie_id=rec.id) }}" class="rec-link">
+          <div class="rec-card">
+            <div class="rec-poster">
+              <img 
+                src="{{ rec.poster_url or '' }}" 
+                alt="{{ rec.title }}" 
+                loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              >
+              <div class="premium-poster-fallback rec-fallback" style="display:none;">
+                <div class="fallback-icon">🎬</div>
+                <div class="fallback-title">{{ rec.title }}</div>
+                <div class="fallback-subtitle">
+                  {{ rec.year if rec.year else 'Movie' }}
+                  {% if rec.genres %}
+                    • {{ rec.genres.split(',')[0] }}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="rec-body">
+              <h3 class="rec-title">{{ rec.title }}</h3>
+
+              <div class="rec-meta">
+                <span>{{ rec.year }}</span>
+                <span>•</span>
+                <span>{{ (rec.genres.split(',')[0] if rec.genres else 'Movie') }}</span>
+              </div>
+
+              <div class="rec-stats">
+                <span class="mini-pill">⭐ {{ rec.rating }}</span>
+                <span class="mini-pill muted">{{ "{:,}".format(rec.votes) }} votes</span>
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="no-recommendations">
+        <div class="empty-icon">🎞️</div>
+        <h3>No recommendations available</h3>
+        <p>We couldn’t find similar movies for this title right now.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .movie-detail-page {
+    position: relative;
+    padding: 0 0 3rem;
+  }
+
+  .backdrop-hero {
+    height: 360px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+
+  .backdrop-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(5,5,10,0.35), rgba(5,5,10,0.92) 75%, rgba(5,5,10,1));
+  }
+
+  .movie-layer {
+    position: relative;
+    margin-top: -140px;
+    z-index: 2;
+  }
+
+  .movie-hero {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    align-items: start;
+  }
+
+  .movie-hero-poster {
+    width: 100%;
+    position: relative;
+  }
+
+  .movie-poster-img {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 22px;
+    border: 1px solid #232332;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    display: block;
+    background: #161620;
+  }
+
+  .movie-badges {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .badge {
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  .year-badge {
+    background: #1a1a24;
+    color: #d4d4df;
+    border-color: #2a2a36;
+  }
+
+  .genre-badge {
+    background: rgba(59,130,246,0.12);
+    color: #93c5fd;
+    border-color: rgba(59,130,246,0.2);
+  }
+
+  .rating-badge {
+    background: rgba(255,204,0,0.12);
+    color: #ffd86b;
+    border-color: rgba(255,204,0,0.2);
+  }
+
+  .tmdb-badge {
+    background: rgba(16,185,129,0.12);
+    color: #6ee7b7;
+    border-color: rgba(16,185,129,0.2);
+  }
+
+  .movie-hero-title {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin: 0 0 0.8rem 0;
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .movie-hero-subtitle {
+    color: #b2b2bf;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .overview-block {
+    margin-bottom: 1.5rem;
+  }
+
+  .overview-block h3 {
+    color: #fff;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.05rem;
+  }
+
+  .overview-block p {
+    color: #c2c2cf;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 780px;
+  }
+
+  .movie-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: #111118;
+    border: 1px solid #1f1f2a;
+    border-radius: 18px;
+    padding: 1rem;
+  }
+
+  .stat-label {
+    color: #9d9dac;
+    font-size: 0.82rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-value {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  .stat-value.small {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .movie-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    text-decoration: none;
+    padding: 0.85rem 1.2rem;
+    border-radius: 14px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .primary-btn {
+    background: #e50914;
+    color: #fff;
+  }
+
+  .primary-btn:hover {
+    background: #f6121d;
+    transform: translateY(-1px);
+  }
+
+  .secondary-btn {
+    background: #171720;
+    color: #fff;
+    border: 1px solid #292935;
+  }
+
+  .secondary-btn:hover {
+    background: #20202b;
+  }
+
+  .recommendation-section {
+    margin-top: 1rem;
+  }
+
+  .section-head {
+    margin-bottom: 1rem;
+  }
+
+  .section-head h2 {
+    color: #fff;
+    font-size: 1.6rem;
+    margin: 0 0 0.3rem 0;
+  }
+
+  .section-head p {
+    color: #a5a5b2;
+    margin: 0;
+  }
+
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1rem;
+  }
+
+  .rec-link {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .rec-card {
+    background: #111118;
+    border: 1px solid #1f1f2a;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    height: 100%;
+  }
+
+  .rec-card:hover {
+    transform: translateY(-4px);
+    border-color: #30303d;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.32);
+  }
+
+  .rec-poster {
+    height: 320px;
+    overflow: hidden;
+    background: #161620;
+    position: relative;
+  }
+
+  .rec-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .rec-card:hover .rec-poster img {
+    transform: scale(1.04);
+  }
+
+  .rec-body {
+    padding: 1rem;
+  }
+
+  .rec-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem 0;
+    line-height: 1.35;
+    min-height: 2.7em;
+  }
+
+  .rec-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #b3b3c0;
+    font-size: 0.88rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .rec-stats {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .mini-pill {
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(255,204,0,0.12);
+    color: #ffd86b;
+  }
+
+  .mini-pill.muted {
+    background: #1a1a24;
+    color: #b8b8c5;
+  }
+
+  .no-recommendations {
+    background: #111118;
+    border: 1px solid #1f1f29;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .empty-icon {
+    font-size: 2.3rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .no-recommendations h3 {
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .no-recommendations p {
+    color: #a6a6b3;
+    margin: 0;
+  }
+
+  /* PREMIUM NO-POSTER FALLBACK */
+  .premium-poster-fallback {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.2rem;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at top right, rgba(229, 9, 20, 0.22), transparent 35%),
+      radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.14), transparent 35%),
+      linear-gradient(160deg, #111118 0%, #181824 45%, #0d0d14 100%);
+  }
+
+  .premium-poster-fallback::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.02) 75%, transparent 75%, transparent);
+    background-size: 28px 28px;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .premium-poster-fallback::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .fallback-icon {
+    font-size: 2.2rem;
+    margin-bottom: 0.9rem;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+  }
+
+  .fallback-title {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1.35;
+    z-index: 1;
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .fallback-subtitle {
+    color: #b6b6c5;
+    font-size: 0.82rem;
+    margin-top: 0.5rem;
+    z-index: 1;
+  }
+
+  .hero-fallback {
+    aspect-ratio: 2 / 3;
+    border-radius: 22px;
+    border: 1px solid #232332;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+  }
+
+  .hero-fallback .fallback-icon {
+    font-size: 2.8rem;
+  }
+
+  .hero-fallback .fallback-title {
+    font-size: 1.2rem;
+    max-width: 85%;
+  }
+
+  .hero-fallback .fallback-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .rec-fallback {
+    height: 100%;
+  }
+
+  @media (max-width: 900px) {
+    .movie-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .movie-hero-poster {
+      max-width: 260px;
+    }
+
+    .movie-layer {
+      margin-top: -80px;
+    }
+
+    .backdrop-hero {
+      height: 260px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .movie-hero-title {
+      font-size: 1.9rem;
+    }
+
+    .movie-stats-row {
+      grid-template-columns: 1fr;
+    }
+
+    .recommendation-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rec-poster {
+      height: 280px;
+    }
+  }
+</style>
+{% endblock %}
