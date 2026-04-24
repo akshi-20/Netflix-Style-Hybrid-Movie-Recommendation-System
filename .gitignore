@@ -73,3 +73,12 @@ artifacts/preview.ipynb
 preview.ipynb
 
 .python-version
+
+
+# ✅ Allow only needed ones
+!models/topk_similarities.pkl
+!models/tfidf_matrix.pkl
+!models/tfidf_vectorizer.pkl
+!models/movie_metadata.parquet
+!data/processed/movies_final.parquet
+!data/processed/tmdb_cache.parquet
